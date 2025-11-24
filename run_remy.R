@@ -37,7 +37,9 @@ data <- list(ngen = 9,
              sigma = 0.25,
              R_init = sim_dt[variable == "R0", true],
              obs = c(rep(0, lead_days), onsets$count),
-             lead_days = lead_days
+             lead_days = lead_days,
+             init = c(0, 0.5),
+             init_mat = matrix(c(1, -0.99, -0.99, 1), nrow = 2)
              )
 
 ## Simulation model for playing with
@@ -60,9 +62,9 @@ mcmc_intervals(fres$draws("Rg")) +
              aes(x = value, y = x), col = "firebrick", size = 2, inherit.aes = FALSE) +
   labs(title = "Reproduction number by generation")
 
-mcmc_hist(fres$draws(c("sigma")))
+mcmc_hist(fres$draws(c("sigma", "initial")))
 fres$summary()
-mcmc_parcoord(fres$draws("Rt"), np = np_cp) +
+mcmc_parcoord(fres$draws("Rg"), np = np_cp) +
   geom_hline(yintercept = sim_dt[variable == "R0", true], col = "firebrick", lty = 2, linewidth = 1) +
   labs(title = "Time-varying reproduction number")
 mcmc_parcoord(fres$draws("onsets")) +
@@ -79,6 +81,12 @@ mcmc_parcoord(fres$draws("reports")) +
              inherit.aes = FALSE, col = "firebrick") +
   labs(title = "Onsets by date of report")
 
+mcmc_parcoord(fres$draws("dbm")) +
+  # geom_point(data = data.frame(x = paste0("reports[",1:data$max_time, "]"), y = data$obs), aes(x = x, y = y),
+  #            inherit.aes = FALSE, col = "firebrick") +
+  labs(title = "Onsets by date of report")
+
+
 mcmc_trace(fres$draws(), pars = "sigma", np = np_cp)
 
 
@@ -91,10 +99,14 @@ plot(as.vector(res$draws("del_dist")))
 
 gtdist <- matrix(as.vector(res$draws("gt_dist", format = "matrix")[1,]), ncol = data$ngen, nrow = data$max_time)
 dim(gtdist)
-# Contribution to time point 1 from each generation
+# Contribution to time point 10 from each generation
 plot((gtdist[10,] / sum(gtdist[10,])))
 # Generation time distribution for 1st generation
-plot(cumsum(gtdist[, 1]), type = 'l')
+plot(gtdist[, 1], type = 'l')
+for(i in 2:ncol(gtdist)){
+  lines(gtdist[, i])
+}
+lines(gtdist2[, 1], col = "red")
 lines(gtdist[, 2], col = "red")
 lines(gtdist[, 3], col = "blue")
 lines(gtdist[, 4], col = "green")

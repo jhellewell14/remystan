@@ -26,7 +26,8 @@ generated quantities {
     for(j in 1:max_time){
       // For gt_dist col 1, generation 0, I want to use a different distribution to account for the fact that our
       // time series starts at first observed case
-      gt_dist[j, i] = gamma_cdf(j | gt_shape * (i - 1) + ip_shape, gt_rate) - gamma_cdf(j - 1| gt_shape * (i - 1) + ip_shape, gt_rate);
+      gt_dist[j, i] = gamma_cdf(j + (ip_shape / gt_rate)| gt_shape * i, gt_rate) -
+      gamma_cdf(j + (ip_shape / gt_rate) - 1| gt_shape * i, gt_rate);
     }
   }
   // Will be fitting distribution shape and rate parameters, they will need decent priors
